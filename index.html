@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Resume Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+</head>
+
+<body>
+
+    <h1 class="title">Resume Analyzer</h1>
+
+    <div class="flex-container">
+        <div id="typing-description"></div>
+
+        <form action="{{ url_for('index') }}" method="POST" enctype="multipart/form-data" class="form">
+            <label>Select Job Role:</label>
+            <select name="job" id="job" required>
+                <option value="" disabled selected>Select Job Role</option>
+                {% for job in jobs %}
+                <option value="{{ job }}">{{ job }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Upload Resume (PDF):</label>
+            <input type="file" name="resume">
+
+            <button type="submit" id="analyze-btn">Analyze</button>
+        </form>
+    </div>
+
+    <div id="loading" style="display:none;">
+        <p>Analyzing... <span class="spinner"></span></p>
+    </div>
+
+    {% if result %}
+        <h3 class="subheading">Job Role: {{ result.job }}</h3>
+
+        <div class="result-section">
+            <h4 class="subheading">Predicted Resume Score:</h4>
+            <div class="score-circle">
+                <p>{{ result.predicted_score }}</p>
+            </div>
+        </div>
+
+     
+
+        <div class="grid-container">
+            <div>
+                <h4>Extracted Skills:</h4>
+                <ul>
+                    {% for skill in result.all_extracted_skills %}
+                    <li>{{ skill }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div>
+                <h4>Contact Information:</h4>
+                <ul>
+                    <li><strong>Email(s):</strong>
+                        {% if result.contact_info.emails %}
+                        {{ result.contact_info.emails | join(', ') }}
+                        {% else %} Not Found {% endif %}
+                    </li>
+                    <li><strong>Phone(s):</strong>
+                        {% if result.contact_info.phones %}
+                        {{ result.contact_info.phones | join(', ') }}
+                        {% else %} Not Found {% endif %}
+                    </li>
+                    <li><strong>LinkedIn:</strong>
+                        {% if result.contact_info.linkedin %}
+                        {{ result.contact_info.linkedin | join(', ') }}
+                        {% else %} Not Found {% endif %}
+                    </li>
+                    <li><strong>GitHub:</strong>
+                        {% if result.contact_info.github %}
+                        {{ result.contact_info.github | join(', ') }}
+                        {% else %} Not Found {% endif %}
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div>
+                <h4>Found Skills (Based on Job Role Requirements):</h4>
+                <ul>
+                    {% for skill in result.found_skills %}
+                    <li>{{ skill }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div>
+                <h4>Missing Skills (Based on Job Role Requirements):</h4>
+                <ul>
+                    {% for skill in result.missing_skills %}
+                    <li>{{ skill }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        {% if result.learning_resources %}
+        <h3>📚 Recommended Learning Resources</h3>
+        <div class="accordion-container">
+            {% for skill, platforms in result.learning_resources.items() %}
+            <div class="accordion-item">
+                <button class="accordion-btn">{{ skill | capitalize }}</button>
+                <div class="accordion-panel">
+                    {% for platform, courses in platforms.items() %}
+                    <h5 class="platform-name">{{ platform }}</h5>
+                    <div class="course-grid">
+                        {% for course in courses %}
+                        <div class="course-card fade-in">
+                            <a href="{{ course.link }}" target="_blank" rel="noopener noreferrer">
+                                <div class="course-title">{{ course.title }}</div>
+                            </a>
+                            <div class="course-platform">{{ platform }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if result.spelling_errors %}
+        <div class="errors-section">
+            <h4>Spelling Suggestions:</h4>
+            <table>
+                <tr>
+                    <th>Type</th>
+                    <th>Error</th>
+                    <th>Suggestion</th>
+                </tr>
+                {% for error in result.spelling_errors %}
+                <tr>
+                    <td>{{ error.type }}</td>
+                    <td>{{ error.error }}</td>
+                    <td>{{ error.suggestion }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% endif %}
+    {% else %}
+        <p>No result available.</p>
+    {% endif %}
+
+    <script>
+        const text = "Upload your resume, select a job role, and get instant analysis with skill matching, scores, and learning resources.";
+        let index = 0;
+        function typeWriter() {
+            if (index < text.length) {
+                document.getElementById("typing-description").innerHTML += text.charAt(index);
+                index++;
+                setTimeout(typeWriter, 50);
+            }
+        }
+        window.onload = typeWriter;
+
+        document.querySelector('form').addEventListener('submit', function () {
+            document.getElementById('loading').style.display = 'block';
+            const btn = document.getElementById('analyze-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+        });
+
+        if (window.performance && performance.navigation.type === 1) {
+            window.location.href = window.location.href.split('?')[0];
+        }
+
+        document.querySelectorAll('.accordion-btn').forEach((btn) => {
+            btn.addEventListener('click', function () {
+                const parent = this.parentElement;
+                parent.classList.toggle('active');
+                const panel = this.nextElementSibling;
+                panel.style.maxHeight = parent.classList.contains('active') ? panel.scrollHeight + "px" : null;
+            });
+        });
+    </script>
+</body>
+
+</html>
