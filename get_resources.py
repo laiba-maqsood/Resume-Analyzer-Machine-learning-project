@@ -1,7 +1,7 @@
 import requests
 
-API_KEY = "AIzaSyCjOpDKzlfku_rAn4vZsXUfZ0KVMyIr2wE"  
-SEARCH_ENGINE_ID = "332520502f04c42b4"  
+API_KEY = "Your API"  
+SEARCH_ENGINE_ID = "Your ID"  
 
 def search_courses(skill):
     platforms = {
